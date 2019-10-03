@@ -1,11 +1,34 @@
-import { Router, Route } from 'core/router';
+import { RouteConfig } from './router';
+import { DetailsParams } from 'items/details';
+import { Router, Route, ParameterizedRoute } from 'core/router';
+import { RouteData } from 'app';
 
 export class AppRouter {
-  login: Route;
-  home: Route;
+  login: Route<RouteData>;
+  forgotPassword: Route<RouteData>;
+  home: Route<RouteData>;
+  items: Route<RouteData>;
+  item: ParameterizedRoute<RouteData, DetailsParams>;
   
-  constructor(router: Router) {
-    this.login = router.addRoute({ name: 'login' });
-    this.home = router.addRoute({ name: 'home', path: ['', 'home '] });
+  constructor(private router: Router<RouteData>) {
+    this.login = this.addRoute({ name: 'login' }, true);
+    this.forgotPassword = this.addRoute({ name: 'forgot-password' }, true);
+    this.home = this.addRoute({ name: 'home', path: ['', 'home'] });
+    this.items = this.addRoute({ name: 'items' });
+    this.item = this.addParameterizedRoute<DetailsParams>({ name: 'item', path: 'items/:id' });
+  }
+
+  private addRoute(config: RouteConfig<RouteData>, isAuth?: boolean) {
+    config.data = { isAuth: Boolean(isAuth) };
+    return this.router.addRoute(config);
+  }
+
+  private addParameterizedRoute<T extends object>(config: RouteConfig<RouteData>) {
+    config.data = { isAuth: false };
+    return this.router.addParameterizedRoute<T>(config);
+  }
+
+  navigate(fragment: string) {
+    this.router.navigate(fragment);
   }
 }
