@@ -1,7 +1,6 @@
 import { RouteConfig } from './router';
 import { DetailsParams } from 'items/details';
 import { Router, Route, ParameterizedRoute } from 'core/router';
-import { RouteData } from 'app';
 
 export class AppRouter {
   login: Route<RouteData>;
@@ -32,3 +31,8 @@ export class AppRouter {
     this.router.navigate(fragment);
   }
 }
+
+export interface RouteData {
+  isAuth: boolean;
+}
+

@@ -1,18 +1,19 @@
 import { History } from 'aurelia-history';
 import { RouteRecognizer } from 'aurelia-route-recognizer';
-import { RouteData } from 'app';
+import { CancellationTokenSource, CancellationToken } from './cancellation';
 
 export class Router<T> {
   private recognizer: RouteRecognizer;
-  private activatedRoute: NavigatedRoute<T>
+  private currentRoute: NavigatedRoute<T>
+  private tokenSource: CancellationTokenSource;
 
-  constructor(private history: History, private routeChangedHandler: (context: RouteContext<T>) => Promise<void>) {
+  constructor(private history: History) {
     this.recognizer = new RouteRecognizer();
   }
 
-  activate() {
+  initialize(routeChangedHandler: (context: RouteContext<T>) => Promise<void>) {
     this.history.activate({
-      routeHandler: (fragment: string) => this.urlChanged(fragment.toLowerCase()),
+      routeHandler: (fragment: string) => this.urlChanged(routeChangedHandler, fragment.toLowerCase()),
       pushState: true
     });
   }
@@ -34,7 +35,9 @@ export class Router<T> {
     return route;
   }
 
-  private async urlChanged(fragment: string) {
+  private async urlChanged(routeChangedHandler: (context: RouteContext<T>) => Promise<void>, fragment: string) {
+    this.tokenSource = new CancellationTokenSource();
+    const token = this.tokenSource.token;
     const recognizedRoutes = this.recognizer.recognize(fragment);
     if (!recognizedRoutes || !recognizedRoutes.length) {
       //404
@@ -42,26 +45,29 @@ export class Router<T> {
     }
 
     const route = recognizedRoutes[0];
-    //todo: cancellation
-    const context = {
-      route: {
+    const context: RouteContext<T> = {
+      newRoute: {
         name: route.handler.name,
         params: route.params,
         data: (<any>route.handler).data
       },
-      activatedRoute: this.activatedRoute
+      currentRoute: this.currentRoute,
+      cancellationToken: token
     };
-    await this.routeChangedHandler(context);
-    this.activatedRoute = context.route;
+    await routeChangedHandler(context);
+    if (!token.isCancellationRequested) {
+      this.currentRoute = context.newRoute;
+    }
   }
 
   navigate(fragment: string) {
+    this.tokenSource.cancel();
     this.history.navigate(fragment);
   }
 
   navigateToRoute(route: Route<T>, params: object) {
     const fragment = this.recognizer.generate(route.name, params);
-    this.history.navigate(fragment);
+    this.navigate(fragment);
   }
 }
 
@@ -72,8 +78,9 @@ export interface RouteConfig<T> {
 }
 
 export interface RouteContext<T> {
-  route: NavigatedRoute<T>;
-  activatedRoute?: NavigatedRoute<T>;
+  newRoute: NavigatedRoute<T>;
+  currentRoute?: NavigatedRoute<T>;
+  cancellationToken: CancellationToken;
 }
 
 export class Route<T> {
@@ -99,9 +106,9 @@ export interface NavigatedRoute<T> {
 }
 
 export interface Activatable {
-  activate2(params: object): Promise<any>;
+  onActivation(params: object): Promise<any>;
 }
 
 export function isActivatable(object: any): object is Activatable {
-  return (object as Activatable).activate2 !== undefined;
+  return (object as Activatable).onActivation !== undefined;
 }

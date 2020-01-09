@@ -1,9 +1,10 @@
 import { items, Item } from 'core/items';
+import { Activatable } from '../core/router';
 
-export class List {
+export class List implements Activatable {
   items: Item[];
   
-  activate2() {
+  onActivation() {
     this.items = items;
     return new Promise(x => setTimeout(() => x(), 3000));
   }
