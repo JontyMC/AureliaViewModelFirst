@@ -3,7 +3,8 @@
   <button click.delegate="logout()">Logout</button>
   <ul>
     <li><a href="/">Home</a></li>
+    <li><a href="/about">About</a></li>
     <li><a href="/items">Items</a></li>
   </ul>
-  <compose view-model.bind="activeItem"></compose>
+  <compose view-model.bind="activeItem$ & async"></compose>
 </template>

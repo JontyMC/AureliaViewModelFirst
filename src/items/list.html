@@ -1,6 +1,6 @@
 <template>
   <h3>Item List</h3>
-  <ul repeat.for="x of items">
-    <li><a href="/items/${x.id}">${x.title}</a></li>
+  <ul repeat.for="x of items$ & async">
+    <li><a href="/items/${x.id}">${x.name}</a></li>
   </ul>
 </template>

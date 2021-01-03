@@ -1,33 +1,24 @@
 import { App } from 'app';
-import { AppRouter, RouteData } from 'core/app-router';
-import { History } from 'aurelia-history';
-import { autoinject } from 'aurelia-framework';
-import { Router, RouteContext } from 'core/router';
+import { autoinject, Container } from 'aurelia-framework';
 import { Auth } from 'auth/auth';
+import { Observable } from 'rxjs';
+import { map, distinctUntilChanged, tap } from 'rxjs/operators';
+import { AppRouter } from 'core/app-router';
 
 @autoinject
 export class Shell {
-  activeItem: App | Auth;
-  router: Router<RouteData>;
-  appRouter: AppRouter;
+  activeItem$: Observable<App | Auth>;
 
-  constructor(history: History) {
-    this.router = new Router<RouteData>(history);
-    this.appRouter = new AppRouter(this.router)
+  constructor(private router: AppRouter, container: Container) {
+    this.activeItem$ = router.route$.pipe(
+      map(x => x.isAuth),
+      distinctUntilChanged(),
+      tap(x => console.log('shell', 1, x)),
+      map(x => x ? container.get(Auth) : container.get(App))
+    );
   }
 
   activate() {
-    this.router.initialize(x => this.onNavigating(x));
-  }
-
-  async onNavigating(context: RouteContext<RouteData>): Promise<void> {
-    if (!context.currentRoute || context.currentRoute.data.isAuth !== context.newRoute.data.isAuth) {
-      this.activeItem = context.newRoute.data.isAuth ? new Auth(this.appRouter) : new App(this.appRouter);
-    }
-    await this.activeItem.onNavigating(context);
-  }
-
-  isAuth(name: string) {
-    return name === 'login';
+    this.router.initialize();
   }
 }

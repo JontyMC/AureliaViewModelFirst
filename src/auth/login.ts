@@ -1,5 +1,7 @@
+import { autoinject } from 'aurelia-framework';
 import { AppRouter } from 'core/app-router';
 
+@autoinject
 export class Login {
   constructor(private router: AppRouter) { }
   

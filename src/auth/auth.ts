@@ -1,19 +1,18 @@
-import { AppRouter, RouteData } from 'core/app-router';
+import { AppRouter } from 'core/app-router';
 import { ForgotPassword } from './forgot-password';
 import { Login } from './login';
-import { autoinject } from 'aurelia-framework';
-import { RouteContext } from 'core/router';
+import { autoinject, Container } from 'aurelia-framework';
+import { Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 @autoinject
 export class Auth {
-  activeItem: Login | ForgotPassword;
+  activeItem$: Observable<Login | ForgotPassword>;
 
-  constructor(private router: AppRouter) {}
-
-  async onNavigating(context: RouteContext<RouteData>): Promise<void> {
-    const route = context.newRoute.name;
-    if (!context.currentRoute || context.currentRoute.name !== route) {
-      this.activeItem = route === 'forgot-password' ? new ForgotPassword() : new Login(this.router);
-    }
+  constructor(router: AppRouter, container: Container) {
+    this.activeItem$ = router.route$.pipe(
+      tap(x => console.log('auth')),
+      map(x => container.get(x.name === 'forgot-password' ? ForgotPassword : Login))
+    );
   }
 }
