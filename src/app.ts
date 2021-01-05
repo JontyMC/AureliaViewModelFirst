@@ -16,7 +16,7 @@ export class App {
     const viewModel$ = router.route$.pipe(
       tap(_ => !Boolean(sessionStorage.getItem('token')) && router.login.navigate()),
       map(x => x.name === 'home' ? home : x.name === 'about' ? about : x.name === 'items' ? items : item),
-      shareReplay()
+      shareReplay(1)
     );
     const navigating$ = viewModel$.pipe(switchMap(x => navigates(x) ? x.navigating$ : of(false)));
     this.activeItem$ = combineLatest([navigating$, viewModel$]).pipe(map(([x, y]) => x ? navigating : y));

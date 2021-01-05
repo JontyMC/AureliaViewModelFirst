@@ -23,7 +23,7 @@ export class List {
           tap(x => console.log(x))
         )
       ),
-      shareReplay()
+      shareReplay(1)
     );
     this.navigating$ = merge(router.route$.pipe(mapTo(true)), this.items$.pipe(mapTo(false)));
   }
