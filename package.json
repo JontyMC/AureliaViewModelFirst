@@ -41,6 +41,8 @@
     "mini-css-extract-plugin": "^0.4.3",
     "minimatch": "^3.0.4",
     "promise-polyfill": "^8.1.0",
+    "rxjs-spy": "^7.5.3",
+    "rxjs-spy-devtools-plugin": "0.0.4",
     "style-loader": "^0.23.1",
     "through2": "^3.0.0",
     "tree-kill": "^1.2.2",

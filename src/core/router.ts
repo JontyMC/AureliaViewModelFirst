@@ -1,14 +1,17 @@
 import { autoinject } from 'aurelia-framework';
 import { History } from 'aurelia-history';
 import { RouteRecognizer, ConfigurableRoute } from 'aurelia-route-recognizer';
+import { shareProxy } from 'core/operators';
 import { Observable, ReplaySubject } from 'rxjs';
+import { tag } from 'rxjs-spy/cjs/operators';
+import { shareReplay } from 'rxjs/operators';
 
 @autoinject
 export class Router<T> {
   private recognizer: RouteRecognizer;
   private data: { [key: string]: T } = {}
   private route = new ReplaySubject<NavigatedRoute<T>>(1);
-  route$: Observable<NavigatedRoute<T>> = this.route;
+  route$: Observable<NavigatedRoute<T>> = this.route.pipe(tag('route'), shareProxy());
 
   constructor(private history: History) {
     this.recognizer = new RouteRecognizer();

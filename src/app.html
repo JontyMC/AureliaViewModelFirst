@@ -6,5 +6,5 @@
     <li><a href="/about">About</a></li>
     <li><a href="/items">Items</a></li>
   </ul>
-  <compose view-model.bind="activeItem$ & async"></compose>
+  <observe view-model.bind="activeItem$"></observe>
 </template>
