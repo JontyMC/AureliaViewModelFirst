@@ -1,12 +1,12 @@
 import { AppRouter } from 'core/app-router';
-import { ViewModel } from 'core/observe';
+import { Controller } from 'core/observe';
 import { combineLatest, Observable, of, timer } from 'rxjs';
 import { tag } from 'rxjs-spy/cjs/operators';
 import { filter, map} from 'rxjs/operators';
 import { autoinject } from 'aurelia-framework';
 
 @autoinject
-export class Home implements ViewModel {
+export class Home implements Controller {
   data = { count: 0 };
   data$: Observable<object>;
 

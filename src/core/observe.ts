@@ -6,6 +6,7 @@ import { Observable, Subscription } from 'rxjs';
 import { ViewLocator } from 'aurelia-templating';
 import { Navigating } from 'core/navigating';
 
+//https://github.com/aurelia/templating-resources/blob/2bb7890402d935d08dc9aa9f22a444229575ef34/src/compose.ts
 @noView
 @customElement('observe')
 export class Observe {
@@ -41,28 +42,29 @@ export class Observe {
   private mainViewModel;
   private dataViewModel
 
-  bind(bindingContext: any, overrideContext: any) {
+  async bind(bindingContext: any, overrideContext: any) {
     this.bindingContext = bindingContext;
     this.overrideContext = overrideContext;
     if (this.viewModel instanceof Observable) {
-      this.addSubscription((this.viewModel as Observable<ViewModel>).subscribe(x => {
-        if (x && x === this.mainViewModel) return;
-        console.log('vm sub', x);
-        if (this.dataSubscription) {
-          this.dataSubscription.unsubscribe();
-        }
-        if (x.data$) {
-          this.setViewModel(this.navigating, null);
-          this.dataSubscription = x.data$.subscribe(y => {
-            if (y && y === this.dataViewModel) return;
-            console.log('vm data sub', x);
-            this.setViewModel(x, y);
-          });
-          this.addSubscription(this.dataSubscription);
-        } else {
-          this.setViewModel(x, null);
-        }
-      }));
+      await new Promise<void>(resolve => {
+        this.addSubscription((this.viewModel as Observable<Controller>).subscribe(x => {
+          if (x && x === this.mainViewModel) return;
+          if (this.dataSubscription) {
+            this.dataSubscription.unsubscribe();
+          }
+          if (x.data$) {
+            this.setViewModel(this.navigating, null);
+            this.dataSubscription = x.data$.subscribe(y => {
+              if (y && y === this.dataViewModel) return;
+              this.setViewModel(x, y);
+            });
+            this.addSubscription(this.dataSubscription);
+          } else {
+            this.setViewModel(x, null);
+          }
+          resolve();
+        }));
+      });
     } else {
       this.setViewModel(this.viewModel, null);
     }
@@ -187,10 +189,10 @@ function needsReInitialization(changes: any) {
   return 'view' in changes || 'viewModel' in changes
 }
 
-export interface ViewModel {
+export interface Controller {
   data$: Observable<object>;
 }
 
-export const isViewModel = (x: any): x is ViewModel => {
+export const isController = (x: any): x is Controller => {
   return Boolean(x.data$);
 }

@@ -1,13 +1,13 @@
 import { autoinject } from 'aurelia-framework';
 import { AppRouter } from 'core/app-router';
-import { ViewModel } from 'core/observe';
+import { Controller } from 'core/observe';
 import { Observable } from 'rxjs';
 import { tag } from 'rxjs-spy/cjs/operators';
 import { fromFetch } from 'rxjs/fetch';
 import { switchMap, map, filter, delay, tap } from 'rxjs/operators';
 
 @autoinject
-export class List implements ViewModel {
+export class List implements Controller {
   private itemIdRegex = /people\/(\d+)/;
   data$: Observable<object>;
   
