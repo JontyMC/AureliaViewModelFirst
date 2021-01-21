@@ -6,12 +6,11 @@ import { Observable, Subscription } from 'rxjs';
 import { ViewLocator } from 'aurelia-templating';
 import { Navigating } from 'core/navigating';
 
-//https://github.com/aurelia/templating-resources/blob/2bb7890402d935d08dc9aa9f22a444229575ef34/src/compose.ts
 @noView
 @customElement('observe')
 export class Observe {
   static inject() {
-    return [DOM.Element, Container, CompositionEngine, Navigating, ViewSlot, ViewResources, TaskQueue, ViewLocator];
+    return [DOM.Element, Container, CompositionEngine, ViewSlot, ViewResources, TaskQueue, ViewLocator, Navigating];
   }
 
   @bindable view: any;
@@ -28,8 +27,9 @@ export class Observe {
   private subscription: Subscription;
   private dataSubscription: Subscription;
 
-  constructor(public element: Element, public container: Container, public compositionEngine: CompositionEngine, private navigating: Navigating,
-    public viewSlot: ViewSlot, public viewResources: ViewResources, public taskQueue: TaskQueue, public viewLocator: ViewLocator) {
+  constructor(public element: Element, public container: Container, public compositionEngine: CompositionEngine,
+    public viewSlot: ViewSlot, public viewResources: ViewResources, public taskQueue: TaskQueue,
+    public viewLocator: ViewLocator, private navigating: Navigating) {
     this.currentController = null;
     this.currentViewModel = null;
     this.changes = Object.create(null);
@@ -39,7 +39,6 @@ export class Observe {
     this.owningView = owningView;
   }
 
-  private mainViewModel;
   private dataViewModel
 
   async bind(bindingContext: any, overrideContext: any) {
@@ -47,23 +46,20 @@ export class Observe {
     this.overrideContext = overrideContext;
     if (this.viewModel instanceof Observable) {
       await new Promise<void>(resolve => {
-        this.addSubscription((this.viewModel as Observable<Controller>).subscribe(x => {
-          if (x && x === this.mainViewModel) return;
-          if (this.dataSubscription) {
-            this.dataSubscription.unsubscribe();
-          }
+        this.subscription?.unsubscribe();
+        this.subscription = (this.viewModel as Observable<Controller>).subscribe(x => {
+          this.dataSubscription?.unsubscribe();
           if (x.data$) {
             this.setViewModel(this.navigating, null);
             this.dataSubscription = x.data$.subscribe(y => {
               if (y && y === this.dataViewModel) return;
               this.setViewModel(x, y);
             });
-            this.addSubscription(this.dataSubscription);
           } else {
             this.setViewModel(x, null);
           }
           resolve();
-        }));
+        });
       });
     } else {
       this.setViewModel(this.viewModel, null);
@@ -72,20 +68,11 @@ export class Observe {
       processChanges(this);
     }
   }
-  
-  private addSubscription(subscription: Subscription) {
-    if (this.subscription) {
-      this.subscription.add(subscription);
-    } else {
-      this.subscription = subscription;
-    }
-  }
 
-  private setViewModel(viewModel: object, data: object) {
-    this.mainViewModel = viewModel;
+  private setViewModel(viewModel: object, data: object, view?: string) {
     this.dataViewModel = data;
     this.viewModel = data ?? viewModel;
-    this.view = this.viewLocator.getViewStrategy(viewModel);
+    this.view = view ?? this.viewLocator.getViewStrategy(viewModel);
     this.changes.viewModel = this.viewModel;
     this.changes.view = this.view;
     this.requestUpdate();

@@ -1,3 +1,5 @@
 <template>
-  <h3>About</h3>
+  <h3>About ${test}d</h3>
+  <button click.delegate="t()">switch</button>
+  <observe view-model.bind="test"></observe>
 </template>
